@@ -94,7 +94,7 @@ const controllerTemplate = (tableName) => `
 const ${tableName}Service = require('./${tableName}.service');
 const express = require('express');
 const router = express.Router();
-const { generateApiResponse } = require('../helper/Helper');
+const { generateApiResponse, authentication } = require('../helper/Helper');
 
 class ${tableName}Controller {
   constructor() {
@@ -108,6 +108,7 @@ class ${tableName}Controller {
   }
 
   // Create API
+  
   async create(req, res) {
     try {
       const data = req.body; // Assuming the request contains data to create
@@ -119,6 +120,7 @@ class ${tableName}Controller {
   }
 
   // Read API
+  
   async read(req, res) {
     try {
       const id = req.params.id; // Assuming the ID is in the request parameters
@@ -134,6 +136,7 @@ class ${tableName}Controller {
   }
 
   // Update API
+  
   async update(req, res) {
     try {
       const id = req.params.id; // Assuming the ID is in the request parameters
@@ -150,6 +153,7 @@ class ${tableName}Controller {
   }
 
   // Delete API
+  
   async delete(req, res) {
     try {
       const id = req.params.id; // Assuming the ID is in the request parameters
@@ -254,12 +258,25 @@ const helperClassTemplate  = () => {
       target[key] = dependency;
     };
   };
-  `
-}
 
+  export function authentication(req, res) {
+    return function (target, propertyKey, descriptor) {
+      const originalMethod = descriptor.value;
+  
+      descriptor.value = async function (...args) {
+        // Access request and response objects
+        const request = args[0];
+        const response = args[1];
+  
+        // You can use the request and response objects here
+  
+        return originalMethod.apply(this, args);
+      };
+  
+      return descriptor;
+    };
+  }
 
-const generateApiResponse  = () => {
-  return `
   export function generateApiResponse(res, apiName, description, data, code = 200) {
     const response = {
       name: apiName,
@@ -270,7 +287,6 @@ const generateApiResponse  = () => {
   
     return res.status(code).json(response);
   }
-  
   `
 }
 
@@ -279,4 +295,4 @@ const folderPath = path.join(__dirname, 'src/helper');
     fs.mkdirSync(folderPath);
   }
 
-fs.writeFileSync(path.join(folderPath, `Helper.js`), helperClassTemplate() + "\n\n\n" + generateApiResponse()); 
+fs.writeFileSync(path.join(folderPath, `Helper.js`), helperClassTemplate()); 

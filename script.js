@@ -17,50 +17,51 @@ const tableData = [
       { name: 'onboarding_id', type: 'integer', modelType: 'number', join: 'onboarding_info'},
     ],
   },
-  {
-    name: 'onboarding_info',
-    table_name: "Onboarding",
-    fields: [
-      { name: 'id', type: 'integer', modelType: 'number' },
-      { name: 'client', type: 'string', modelType: 'string' },
-      { name: 'script_url', type: 'string', modelType: 'string'},
-      { name: 'web_account_id', type: 'string', modelType: 'string'},
-      { name: 'web_id', type: 'string', modelType: 'string'},
-      { name: 'validated', type: 'boolean', modelType: 'boolean'},
-      { name: 'status', type: 'boolean', modelType: 'boolean'},
-      { name: 'isdashboardready', type: 'boolean', modelType: 'boolean'}
-    ],
-  },
-  {
-    name: 'customer',
-    table_name: "Customers",
-    fields: [
-      { name: 'customer_id', type: 'int', modelType: 'number' },
-      { name: 'first_name', type: 'varchar(100)', modelType: 'string' },
-      { name: 'last_name', type: 'varchar(100)', modelType: 'string' },
-      { name: 'age', type: 'int', modelType: 'number' },
-      { name: 'country', type: 'varchar(100)', modelType: 'string' },
-    ],
-  },
-  {
-    name: 'order',
-    table_name: "Orders",
-    fields: [
-      { name: 'order_id', type: 'integer', modelType: 'number' },
-      { name: 'item', type: 'varchar(100)', modelType: 'string' },
-      { name: 'amount', type: 'integer', modelType: 'number' },
-      { name: 'customer_id', type: 'integer', modelType: 'number' },
-    ],
-  },
+  // {
+  //   name: 'onboarding_info',
+  //   table_name: "Onboarding",
+  //   fields: [
+  //     { name: 'id', type: 'integer', modelType: 'number' },
+  //     { name: 'client', type: 'string', modelType: 'string' },
+  //     { name: 'script_url', type: 'string', modelType: 'string'},
+  //     { name: 'web_account_id', type: 'string', modelType: 'string'},
+  //     { name: 'web_id', type: 'string', modelType: 'string'},
+  //     { name: 'validated', type: 'boolean', modelType: 'boolean'},
+  //     { name: 'status', type: 'boolean', modelType: 'boolean'},
+  //     { name: 'isdashboardready', type: 'boolean', modelType: 'boolean'}
+  //   ],
+  // },
+  // {
+  //   name: 'customer',
+  //   table_name: "Customers",
+  //   fields: [
+  //     { name: 'customer_id', type: 'int', modelType: 'number' },
+  //     { name: 'first_name', type: 'varchar(100)', modelType: 'string' },
+  //     { name: 'last_name', type: 'varchar(100)', modelType: 'string' },
+  //     { name: 'age', type: 'int', modelType: 'number' },
+  //     { name: 'country', type: 'varchar(100)', modelType: 'string' },
+  //   ],
+  // },
+  // {
+  //   name: 'order',
+  //   table_name: "Orders",
+  //   fields: [
+  //     { name: 'order_id', type: 'integer', modelType: 'number' },
+  //     { name: 'item', type: 'varchar(100)', modelType: 'string' },
+  //     { name: 'amount', type: 'integer', modelType: 'number' },
+  //     { name: 'customer_id', type: 'integer', modelType: 'number' },
+  //   ],
+  // },
 ];
 
 // Define a template for each component
 const serviceTemplate = (tableName, fields) => {
   
     return `
-    const ${tableName}Repository = require('./${tableName}.repository');
+    import{ ${tableName}Repository } from './${tableName}.repository'
 
-    class ${tableName}Service {
+    export class ${tableName}Service {
+      repository:any;
       constructor() {
         this.repository = new ${tableName}Repository();
       }
@@ -86,17 +87,18 @@ const serviceTemplate = (tableName, fields) => {
       }
     }
     
-    module.exports = ${tableName}Service;
+    //module.exports = ${tableName}Service;
   `;
   };
 
 const controllerTemplate = (tableName) => `
-const ${tableName}Service = require('./${tableName}.service');
-const express = require('express');
-const router = express.Router();
-const { generateApiResponse, authentication } = require('../helper/Helper');
+import { ${tableName}Service } from './${tableName}.service'
+import { Router } from 'express'
+const router = Router();
+import { generateApiResponse, authentication } from '../helper/Helper';
 
-class ${tableName}Controller {
+export class ${tableName}Controller {
+  service: any;
   constructor() {
     this.service = new ${tableName}Service();
 
@@ -174,8 +176,6 @@ class ${tableName}Controller {
   }
 }
 
-module.exports = ${tableName}Controller;
-
 `;
 
 const repositoryTemplate = (tableName, fields) => {
@@ -186,7 +186,13 @@ import { ${tableName} } from './${tableName}.model'
 export class ${tableName}Repository {
   db: any;
   constructor() {
-    this.db = new Pool(/* your database configuration */);
+    this.db = new Pool({
+      user: 'postgres',
+      host: 'localhost',
+      database: 'test',
+      password: 'Tejas@#123',
+      port: 5432,
+    });
   }
 
   async create(data:any): Promise<${tableName} | undefined> {
@@ -233,23 +239,70 @@ const modelTemplate = (tableName, fields) => {
 `;
 };
 
-const folderPath_src = path.join(__dirname, "src")
-if (!fs.existsSync(folderPath_src)) {
-  fs.mkdirSync(folderPath_src);
-}
-// Loop through table data and generate files for each
-tableData.forEach(({ name, fields, table_name }) => {
-  const folderPath = path.join(__dirname, "/src/"+table_name);
-  if (!fs.existsSync(folderPath)) {
-    fs.mkdirSync(folderPath);
-  }
+const packageJSONTemplate = (tableName, fields) => {
+  return `
+  {
+    "name": "Backend-builder",
+    "version": "1.0.0",
+    "description": "",
+    "scripts": {
+      "dev": "npx tsc && ts-node-dev --exit-child src/index.ts",
+      "start": "ts-node src/index.ts"
+    },
+    "devDependencies": {
+      "@types/express": "^4.17.1",
+      "@types/node": "^20.8.10",
+      "ts-node": "^10.9.1",
+      "ts-node-dev": "^2.0.0",
+      "typescript": "^5.2.2"
+    },
+    "dependencies": {
+      "express": "^4.17.1"
+    }
+  }  
+`;
+};
 
-  fs.writeFileSync(path.join(folderPath, `${name}.service.js`), serviceTemplate(name, fields));
-  fs.writeFileSync(path.join(folderPath, `${name}.controller.js`), controllerTemplate(name));
-  fs.writeFileSync(path.join(folderPath, `${name}.repository.ts`), repositoryTemplate(name, fields));
-  fs.writeFileSync(path.join(folderPath, `${name}.model.ts`), modelTemplate(name, fields));
+const tsConfigTemplate = (tableName, fields) => {
+  return `
+  {
+    "compilerOptions": {
+      "module": "commonjs",
+      "esModuleInterop": true,
+      "target": "es6",
+      "moduleResolution": "node",
+      "sourceMap": true,
+      "outDir": "dist"
+    },
+    "lib": ["es2015"]
+  } 
+`;
+};
+
+const indexTemplate = () => {
+  return (
+    `
+    
+import express from 'express';
+import { v2_userController } from './Users/v2_user.controller'
+const app = express();
+const port = 3000;
+
+const v2_userController_test = new v2_userController();
+
+app.use('/user', v2_userController.getRouter());
+
+app.get('/', (req, res) => {
+  res.send('Hello World!');
 });
 
+app.listen(port, () => {
+  return console.log(\`Express is listening at http://localhost:$\{port}\`);
+});
+    
+    `
+  )
+}
 
 const helperClassTemplate  = () => {
   return `
@@ -290,9 +343,36 @@ const helperClassTemplate  = () => {
   `
 }
 
-const folderPath = path.join(__dirname, 'src/helper');
+const Main_Backend_starter = path.join(__dirname, "Result")
+if (!fs.existsSync(Main_Backend_starter)) {
+  fs.mkdirSync(Main_Backend_starter);
+}
+
+const folderPath_src = path.join(__dirname, "Result/src")
+if (!fs.existsSync(folderPath_src)) {
+  fs.mkdirSync(folderPath_src);
+}
+// Loop through table data and generate files for each
+tableData.forEach(({ name, fields, table_name }) => {
+  const folderPath = path.join(__dirname, "/Result/src/"+table_name);
   if (!fs.existsSync(folderPath)) {
     fs.mkdirSync(folderPath);
   }
 
-fs.writeFileSync(path.join(folderPath, `Helper.js`), helperClassTemplate()); 
+  fs.writeFileSync(path.join(folderPath, `${name}.service.ts`), serviceTemplate(name, fields));
+  fs.writeFileSync(path.join(folderPath, `${name}.controller.ts`), controllerTemplate(name));
+  fs.writeFileSync(path.join(folderPath, `${name}.repository.ts`), repositoryTemplate(name, fields));
+  fs.writeFileSync(path.join(folderPath, `${name}.model.ts`), modelTemplate(name, fields));
+});
+
+const BasePath = path.join(__dirname, 'Result');
+
+if (!fs.existsSync(path.join(BasePath, '/src/helper'))) {
+  fs.mkdirSync(path.join(BasePath, '/src/helper'));
+  fs.writeFileSync(path.join(path.join(BasePath, '/src/helper'), `Helper.ts`), helperClassTemplate()); 
+}
+
+
+fs.writeFileSync(path.join(path.join(BasePath, '/src'), `index.ts`), indexTemplate()); 
+fs.writeFileSync(path.join(path.join(BasePath, ''), `tsconfig.json`), tsConfigTemplate()); 
+fs.writeFileSync(path.join(path.join(BasePath, ''), `package.json`), packageJSONTemplate()); 

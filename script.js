@@ -289,6 +289,7 @@ const packageJSONTemplate = (tableName, fields) => {
     "devDependencies": {
       "@types/express": "^4.17.1",
       "@types/node": "^20.8.10",
+      "pg": "^8.11.3",
       "dotenv": "^16.3.1",
       "ts-node": "^10.9.1",
       "ts-node-dev": "^2.0.0",
@@ -340,6 +341,12 @@ ${
 const app = express();
 const port = 3000;
 
+//Controllers Init
+${
+  tableData.map(({ name, fields, table_name }) => {
+      return `const ${name}Controller_test = new ${name}Controller(); \n`
+  }).join("")
+}
 
 //Routes
 ${

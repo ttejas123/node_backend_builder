@@ -1,5 +1,7 @@
 const fs = require('fs');
 const path = require('path')
+const archiver = require('archiver');
+const bodyParser = require('body-parser');
 
 // Replace this with your table data
 const tableData = [
@@ -17,41 +19,41 @@ const tableData = [
       { name: 'onboarding_id', type: 'integer', modelType: 'number', join: 'onboarding_info'},
     ],
   },
-  // {
-  //   name: 'onboarding_info',
-  //   table_name: "Onboarding",
-  //   fields: [
-  //     { name: 'id', type: 'integer', modelType: 'number' },
-  //     { name: 'client', type: 'string', modelType: 'string' },
-  //     { name: 'script_url', type: 'string', modelType: 'string'},
-  //     { name: 'web_account_id', type: 'string', modelType: 'string'},
-  //     { name: 'web_id', type: 'string', modelType: 'string'},
-  //     { name: 'validated', type: 'boolean', modelType: 'boolean'},
-  //     { name: 'status', type: 'boolean', modelType: 'boolean'},
-  //     { name: 'isdashboardready', type: 'boolean', modelType: 'boolean'}
-  //   ],
-  // },
-  // {
-  //   name: 'customer',
-  //   table_name: "Customers",
-  //   fields: [
-  //     { name: 'customer_id', type: 'int', modelType: 'number' },
-  //     { name: 'first_name', type: 'varchar(100)', modelType: 'string' },
-  //     { name: 'last_name', type: 'varchar(100)', modelType: 'string' },
-  //     { name: 'age', type: 'int', modelType: 'number' },
-  //     { name: 'country', type: 'varchar(100)', modelType: 'string' },
-  //   ],
-  // },
-  // {
-  //   name: 'order',
-  //   table_name: "Orders",
-  //   fields: [
-  //     { name: 'order_id', type: 'integer', modelType: 'number' },
-  //     { name: 'item', type: 'varchar(100)', modelType: 'string' },
-  //     { name: 'amount', type: 'integer', modelType: 'number' },
-  //     { name: 'customer_id', type: 'integer', modelType: 'number' },
-  //   ],
-  // },
+  {
+    name: 'onboarding_info',
+    table_name: "Onboarding",
+    fields: [
+      { name: 'id', type: 'integer', modelType: 'number' },
+      { name: 'client', type: 'string', modelType: 'string' },
+      { name: 'script_url', type: 'string', modelType: 'string'},
+      { name: 'web_account_id', type: 'string', modelType: 'string'},
+      { name: 'web_id', type: 'string', modelType: 'string'},
+      { name: 'validated', type: 'boolean', modelType: 'boolean'},
+      { name: 'status', type: 'boolean', modelType: 'boolean'},
+      { name: 'isdashboardready', type: 'boolean', modelType: 'boolean'}
+    ],
+  },
+  {
+    name: 'customer',
+    table_name: "Customers",
+    fields: [
+      { name: 'customer_id', type: 'int', modelType: 'number' },
+      { name: 'first_name', type: 'varchar(100)', modelType: 'string' },
+      { name: 'last_name', type: 'varchar(100)', modelType: 'string' },
+      { name: 'age', type: 'int', modelType: 'number' },
+      { name: 'country', type: 'varchar(100)', modelType: 'string' },
+    ],
+  },
+  {
+    name: 'order',
+    table_name: "Orders",
+    fields: [
+      { name: 'order_id', type: 'integer', modelType: 'number' },
+      { name: 'item', type: 'varchar(100)', modelType: 'string' },
+      { name: 'amount', type: 'integer', modelType: 'number' },
+      { name: 'customer_id', type: 'integer', modelType: 'number' },
+    ],
+  },
 ];
 
 // Define a template for each component
@@ -74,6 +76,11 @@ const serviceTemplate = (tableName, fields) => {
       async read(id) {
         // Implement business logic
         return this.repository.read(id);
+      }
+      
+      async readAll() {
+        // Implement business logic
+        return await this.repository.readAll();
       }
     
       async update(id, data) {
@@ -104,6 +111,7 @@ export class ${tableName}Controller {
 
     // Define the routes and mappings within the constructor
     router.post('/', this.create.bind(this));
+    router.get('/', this.readAll.bind(this));
     router.get('/:id', this.read.bind(this));
     router.put('/:id', this.update.bind(this));
     router.delete('/:id', this.delete.bind(this));
@@ -127,6 +135,21 @@ export class ${tableName}Controller {
     try {
       const id = req.params.id; // Assuming the ID is in the request parameters
       const result = await this.service.read(id);
+      if (result) {
+        generateApiResponse(res, 'Read ${tableName}', 'Item fetched successfully', result);
+      } else {
+        generateApiResponse(res, 'Read ${tableName}', 'Item not found', null, 404);
+      }
+    } catch (error) {
+      generateApiResponse(res, 'Read ${tableName}', 'Failed to fetch the item', null, 500);
+    }
+  }
+
+  // Read All API
+  
+  async readAll(req, res) {
+    try {
+      const result = await this.service.readAll();
       if (result) {
         generateApiResponse(res, 'Read ${tableName}', 'Item fetched successfully', result);
       } else {
@@ -187,41 +210,55 @@ export class ${tableName}Repository {
   db: any;
   constructor() {
     this.db = new Pool({
-      user: 'postgres',
-      host: 'localhost',
-      database: 'test',
-      password: 'Tejas@#123',
-      port: 5432,
+      user: process.env.user,
+      host: process.env.host,
+      database: process.env.database,
+      password: process.env.password,
+      port: parseInt(process.env.port),
     });
   }
 
-  async create(data:any): Promise<${tableName} | undefined> {
-    const query = \`INSERT INTO ${tableName} (${fieldNames.join(', ')}) VALUES (\${data.join(', ')}) RETURNING *\`;
-    const response = await this.db.query(query, data);
+  async create(data:${tableName}[]): Promise<${tableName} | undefined> {
+    const columns = Object.keys(data[0]);
+
+    const query = \`
+        INSERT INTO ${tableName} ($\{columns.join(', ')})
+        VALUES
+        $\{data.map(item => \`($\{columns.map(col => typeof item[col] === 'string' ? \`'$\{item[col]}'\` : item[col]).join(', ')})\`).join(', ')}
+        RETURNING *;
+    \`;
+    // const query = \`INSERT INTO ${tableName} (${fieldNames.join(', ')}) VALUES (\${data.join(', ')}) RETURNING *\`;
+    const response = await this.db.query(query, []);
     return response
   }
 
   async read(id:any): Promise<${tableName}[] | any[]> {
     const query = \`SELECT * FROM ${tableName} WHERE id = \${id}\`;
-    const response = await this.db.query(query, [id]);
+    const response = await this.db.query(query, []);
+    return response
+  }
+
+  async readAll(): Promise<${tableName}[] | any[]> {
+    const query = \`SELECT * FROM ${tableName}\`;
+    const response = await this.db.query(query, []);
     return response
   }
 
   async exists(id:any): Promise<boolean> {
     const query = \`SELECT * FROM ${tableName} WHERE id = \${id}\`;
-    const response = await this.db.query(query, [id]);
+    const response = await this.db.query(query, []);
     return response.length > 0 ? true : false;
   }
 
   async update(id:any, data:any): Promise<${tableName} | undefined> {
     const query = \`UPDATE ${tableName} SET \${this.db.as.values(data)} WHERE id = \${id} RETURNING *\`;
-    const response = await this.db.query(query, data);
+    const response = await this.db.query(query, []);
     return response
   }
 
   async delete(id:any): Promise<${tableName} | undefined> {
     const query = \`DELETE FROM ${tableName} WHERE id = \${id} RETURNING *\`;
-    const response = await this.db.query(query, [id]);
+    const response = await this.db.query(query, []);
     return response
   }
 }
@@ -252,6 +289,7 @@ const packageJSONTemplate = (tableName, fields) => {
     "devDependencies": {
       "@types/express": "^4.17.1",
       "@types/node": "^20.8.10",
+      "dotenv": "^16.3.1",
       "ts-node": "^10.9.1",
       "ts-node-dev": "^2.0.0",
       "typescript": "^5.2.2"
@@ -279,21 +317,40 @@ const tsConfigTemplate = (tableName, fields) => {
 `;
 };
 
+const envTemplate = (tableName, fields) => {
+  return `
+  user=postgres
+  host=localhost
+  database=test
+  password=Tejas@#123
+  port=5432
+`;
+};
+
 const indexTemplate = () => {
   return (
     `
-    
 import express from 'express';
-import { v2_userController } from './Users/v2_user.controller'
+import 'dotenv/config'
+${
+  tableData.map(({ name, fields, table_name }) => {
+      return `import { ${name}Controller } from './${table_name}/${name}.controller'; \n`
+  }).join("")
+}
 const app = express();
 const port = 3000;
 
-const v2_userController_test = new v2_userController();
 
-app.use('/user', v2_userController.getRouter());
+//Routes
+${
+  tableData.map(({ name, fields, table_name }) => {
+      return `
+app.use('/${name}', ${name}Controller.getRouter());`
+  }).join("")
+}
 
 app.get('/', (req, res) => {
-  res.send('Hello World!');
+  res.send('Api Documentation will go here');
 });
 
 app.listen(port, () => {
@@ -312,23 +369,30 @@ const helperClassTemplate  = () => {
     };
   };
 
-  export function authentication(req, res) {
-    return function (target, propertyKey, descriptor) {
-      const originalMethod = descriptor.value;
-  
-      descriptor.value = async function (...args) {
-        // Access request and response objects
-        const request = args[0];
-        const response = args[1];
-  
-        // You can use the request and response objects here
-  
-        return originalMethod.apply(this, args);
-      };
-  
-      return descriptor;
+  export const authentication = (target: any, propertyKey: string, descriptor: PropertyDescriptor) => {
+    const originalMethod = descriptor.value;
+    descriptor.value = function (...args: any[]) {
+        
+        let msg: string;
+        if(args[0]){
+            msg = (\`$\{propertyKey}, that has a parameter value: $\{args[0]}\`)
+        }
+        else{
+            msg = \`\${propertyKey}\`
+        }
+        console.log(\`Logger says - calling the method: $\{msg}\`);
+        const result = originalMethod.apply(this, args);
+        if(result){
+            msg = \`$\{propertyKey} and returned: $\{JSON.stringify(result)}\`;
+        }
+        else{
+            msg = \`$\{propertyKey}\`;
+        }
+        console.log(\`Logger says - called the method: $\{msg}\`);
+        return result;
     };
-  }
+     return descriptor;
+};
 
   export function generateApiResponse(res, apiName, description, data, code = 200) {
     const response = {
@@ -375,4 +439,31 @@ if (!fs.existsSync(path.join(BasePath, '/src/helper'))) {
 
 fs.writeFileSync(path.join(path.join(BasePath, '/src'), `index.ts`), indexTemplate()); 
 fs.writeFileSync(path.join(path.join(BasePath, ''), `tsconfig.json`), tsConfigTemplate()); 
-fs.writeFileSync(path.join(path.join(BasePath, ''), `package.json`), packageJSONTemplate()); 
+fs.writeFileSync(path.join(path.join(BasePath, ''), `package.json`), packageJSONTemplate());
+fs.writeFileSync(path.join(path.join(BasePath, ''), `.env`), envTemplate());
+
+
+
+
+
+
+const resultFolderPath = path.join(__dirname, 'Result');
+  const zipPath = path.join(__dirname, 'generated-code.zip');
+  const output = fs.createWriteStream(zipPath);
+  const archive = archiver('zip', { zlib: { level: 9 } });
+
+  output.on('close', () => {
+    console.log(archive.pointer() + ' total bytes');
+    console.log('archiver has been finalized and the output file descriptor has closed.');
+
+    // Send the zip file path to the frontend
+  });
+
+  archive.on('error', (err) => {
+    console.error('Error creating zip file:', err);
+  });
+
+  // Add the Result folder to the zip file
+  archive.directory(resultFolderPath, 'Result');
+  archive.pipe(output);
+  archive.finalize();

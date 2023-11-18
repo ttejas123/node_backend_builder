@@ -121,7 +121,7 @@ export class ${tableName}Controller {
   
   async create(req, res) {
     try {
-      const data = req.body; // Assuming the request contains data to create
+      const data = req.body.data; // Assuming the request contains data to create
       const result = await this.service.create(data);
       generateApiResponse(res, 'Create ${tableName}', 'Item created successfully', result);
     } catch (error) {
@@ -151,7 +151,7 @@ export class ${tableName}Controller {
     try {
       const result = await this.service.readAll();
       if (result) {
-        generateApiResponse(res, 'Read ${tableName}', 'Item fetched successfully', result);
+        generateApiResponse(res, 'Read ${tableName}', 'Item fetched successfully', result.rows);
       } else {
         generateApiResponse(res, 'Read ${tableName}', 'Item not found', null, 404);
       }
@@ -287,10 +287,13 @@ const packageJSONTemplate = (tableName, fields) => {
       "start": "ts-node src/index.ts"
     },
     "devDependencies": {
+      "@types/body-parser": "^1.19.5",
+      "@types/cors": "^2.8.16",
       "@types/express": "^4.17.1",
       "@types/node": "^20.8.10",
-      "pg": "^8.11.3",
+      "cors": "^2.8.5",
       "dotenv": "^16.3.1",
+      "pg": "^8.11.3",
       "ts-node": "^10.9.1",
       "ts-node-dev": "^2.0.0",
       "typescript": "^5.2.2"
@@ -320,10 +323,10 @@ const tsConfigTemplate = (tableName, fields) => {
 
 const envTemplate = (tableName, fields) => {
   return `
-  user=postgres
-  host=localhost
-  database=test
-  password=Tejas@#123
+  user="postgres"
+  host="localhost"
+  database="test"
+  password="Tejas@#123"
   port=5432
 `;
 };
@@ -331,8 +334,10 @@ const envTemplate = (tableName, fields) => {
 const indexTemplate = () => {
   return (
     `
+import bodyParser from 'body-parser';
 import express from 'express';
 import 'dotenv/config'
+import cors from 'cors'
 ${
   tableData.map(({ name, fields, table_name }) => {
       return `import { ${name}Controller } from './${table_name}/${name}.controller'; \n`
@@ -340,6 +345,9 @@ ${
 }
 const app = express();
 const port = 3000;
+
+app.use(bodyParser.json());
+app.use(cors())
 
 //Controllers Init
 ${
@@ -414,18 +422,20 @@ const helperClassTemplate  = () => {
   `
 }
 
-const Main_Backend_starter = path.join(__dirname, "Result")
+const BaseFolder = "Result"
+
+const Main_Backend_starter = path.join(__dirname, BaseFolder)
 if (!fs.existsSync(Main_Backend_starter)) {
   fs.mkdirSync(Main_Backend_starter);
 }
 
-const folderPath_src = path.join(__dirname, "Result/src")
+const folderPath_src = path.join(__dirname, BaseFolder+"/src")
 if (!fs.existsSync(folderPath_src)) {
   fs.mkdirSync(folderPath_src);
 }
 // Loop through table data and generate files for each
 tableData.forEach(({ name, fields, table_name }) => {
-  const folderPath = path.join(__dirname, "/Result/src/"+table_name);
+  const folderPath = path.join(__dirname, "/"+BaseFolder+"/src/"+table_name);
   if (!fs.existsSync(folderPath)) {
     fs.mkdirSync(folderPath);
   }
@@ -436,7 +446,7 @@ tableData.forEach(({ name, fields, table_name }) => {
   fs.writeFileSync(path.join(folderPath, `${name}.model.ts`), modelTemplate(name, fields));
 });
 
-const BasePath = path.join(__dirname, 'Result');
+const BasePath = path.join(__dirname, BaseFolder);
 
 if (!fs.existsSync(path.join(BasePath, '/src/helper'))) {
   fs.mkdirSync(path.join(BasePath, '/src/helper'));
@@ -454,7 +464,7 @@ fs.writeFileSync(path.join(path.join(BasePath, ''), `.env`), envTemplate());
 
 
 
-const resultFolderPath = path.join(__dirname, 'Result');
+const resultFolderPath = path.join(__dirname, BaseFolder);
   const zipPath = path.join(__dirname, 'generated-code.zip');
   const output = fs.createWriteStream(zipPath);
   const archive = archiver('zip', { zlib: { level: 9 } });
@@ -470,7 +480,7 @@ const resultFolderPath = path.join(__dirname, 'Result');
     console.error('Error creating zip file:', err);
   });
 
-  // Add the Result folder to the zip file
-  archive.directory(resultFolderPath, 'Result');
+  // Add the ``BaseFolder`` folder to the zip file
+  archive.directory(resultFolderPath, BaseFolder);
   archive.pipe(output);
   archive.finalize();

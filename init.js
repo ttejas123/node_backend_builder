@@ -1,4 +1,5 @@
 const Backend_builder = require('./Services/Backend_builder');
+const generateCreateTableQueries = require('./Services/create_sql_table');
 const frontend_builder = require('./Services/frontend_builder');
 // Replace this with your table data
 const tableData = [
@@ -55,3 +56,4 @@ const tableData = [
 
 Backend_builder(tableData)
 frontend_builder(tableData)
+console.log(generateCreateTableQueries(tableData))

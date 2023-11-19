@@ -120,7 +120,6 @@ import ${table_name}DataTable from './component/${table_name}/${table_name}DataT
     }).join('\n');
     const components = tableData.map(({ table_name }) => {
         return (`
-// <${table_name}Form key="${table_name}_form" />
 <${table_name}DataTable key="${table_name}_datatable" />
 `)
     }).join('\n');

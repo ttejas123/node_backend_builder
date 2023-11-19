@@ -21,46 +21,106 @@ const generateReactComponent = (tableName, fields, ComponentName) => {
   }).join('\n');
 
   return `
-    import { useState } from 'react';
-    import axios from 'axios';
+import { useState } from 'react';
+import axios from 'axios';
+import Modal from 'react-modal'; // Import the modal library
 
-    const ${ComponentName}Form = () => {
-      const [formData, setFormData] = useState({});
+const ${ComponentName}Form = ({ isOpen, onRequestClose }) => {
+  const [formData, setFormData] = useState({});
 
-      const handleSubmit = async () => {
-        try {
-          const response = await axios.post('http://localhost:3000/${tableName}', {data: [formData]});
-          console.log(response.data);
-        } catch (error) {
-          console.error('Error:', error);
-        }
-      };
+  const handleSubmit = async () => {
+    try {
+      const response = await axios.post('http://localhost:3000/${tableName}', { data: [formData] });
+      console.log(response.data);
+      onRequestClose(); // Close the modal after successful submission
+    } catch (error) {
+      console.error('Error:', error);
+    }
+  };
 
-      return (
-        <div>
-          <h2>${ComponentName} Form</h2>
-          <form onSubmit={handleSubmit}>
-            ${fieldElements}
-            <button type="submit">Submit</button>
-          </form>
-        </div>
-      );
-    };
+  return (
+    <Modal
+      isOpen={isOpen}
+      onRequestClose={onRequestClose}
+      contentLabel="${ComponentName} Form"
+    >
+      <div>
+        <h2>${ComponentName} Form</h2>
+        <form onSubmit={handleSubmit}>
+          ${fieldElements}
+          <button type="submit">Submit</button>
+        </form>
+      </div>
+    </Modal>
+  );
+};
 
-    export default ${ComponentName}Form;
+export default ${ComponentName}Form;
   `;
+  };
+
+  const generateDataTableComponent = (tableName, fields, ComponentName) => {
+    const columns = fields.map(field => ({
+      name: field.name,
+      selector: field.name,
+      sortable: true,
+    }));
+  
+    return `
+      import { useEffect, useState } from 'react';
+      import DataTable from 'react-data-table-component';
+      import axios from 'axios';
+      import ${ComponentName}Form from './${ComponentName}Form';
+  
+      const ${ComponentName}DataTable = () => {
+        const [data, setData] = useState([]);
+        const [isModalOpen, setIsModalOpen] = useState(false);
+
+        const openModal = () => setIsModalOpen(true);
+        const closeModal = () => setIsModalOpen(false);
+  
+        useEffect(() => {
+          fetchData();
+        }, []);
+  
+        const fetchData = async () => {
+          try {
+            const response = await axios.get('http://localhost:3000/${tableName}');
+            setData(response.data.data);
+          } catch (error) {
+            console.error('Error:', error);
+          }
+        };
+  
+        return (
+          <div>
+            <h2>${tableName} DataTable</h2>
+            <button onClick={openModal}>Add ${ComponentName}</button>
+            <DataTable
+              columns={${JSON.stringify(columns, null, 2)}}
+              data={data}
+              pagination
+              highlightOnHover
+            />
+            <${ComponentName}Form isOpen={isModalOpen} onRequestClose={closeModal} />
+          </div>
+        );
+      };
+  
+      export default ${ComponentName}DataTable;
+    `;
   };
   
   const generateReactMainApp = (tableData) => {
     const imports = tableData.map(({ table_name }) => {
         return (`
-import ${table_name}Form from './component/${table_name}/${table_name}Form';
+// import ${table_name}Form from './component/${table_name}/${table_name}Form';
 import ${table_name}DataTable from './component/${table_name}/${table_name}DataTable';
         `)
     }).join('\n');
     const components = tableData.map(({ table_name }) => {
         return (`
-<${table_name}Form key="${table_name}_form" />
+// <${table_name}Form key="${table_name}_form" />
 <${table_name}DataTable key="${table_name}_datatable" />
 `)
     }).join('\n');
@@ -94,51 +154,6 @@ export default App;
         </React.StrictMode>,
         document.getElementById('root')
       );
-    `;
-  };
-
-  const generateDataTableComponent = (tableName, fields, ComponentName) => {
-    const columns = fields.map(field => ({
-      name: field.name,
-      selector: field.name,
-      sortable: true,
-    }));
-  
-    return `
-      import { useEffect, useState } from 'react';
-      import DataTable from 'react-data-table-component';
-      import axios from 'axios';
-  
-      const ${ComponentName}DataTable = () => {
-        const [data, setData] = useState([]);
-  
-        useEffect(() => {
-          fetchData();
-        }, []);
-  
-        const fetchData = async () => {
-          try {
-            const response = await axios.get('http://localhost:3000/${tableName}');
-            setData(response.data.data);
-          } catch (error) {
-            console.error('Error:', error);
-          }
-        };
-  
-        return (
-          <div>
-            <h2>${tableName} DataTable</h2>
-            <DataTable
-              columns={${JSON.stringify(columns, null, 2)}}
-              data={data}
-              pagination
-              highlightOnHover
-            />
-          </div>
-        );
-      };
-  
-      export default ${ComponentName}DataTable;
     `;
   };
 
@@ -184,7 +199,8 @@ export default defineConfig({
               "eslint-plugin-react": "^7.33.2",
               "eslint-plugin-react-hooks": "^4.6.0",
               "eslint-plugin-react-refresh": "^0.4.4",
-              "vite": "^5.0.0"
+              "vite": "^5.0.0",
+              "react-modal": "^3.16.1"
             }
           }
           

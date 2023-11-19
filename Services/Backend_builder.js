@@ -1,7 +1,7 @@
 const fs = require('fs');
 const path = require('path')
 const archiver = require('archiver');
-const BaseFolder = "/../dist/Result"
+const BaseFolder = "/../dist/Result-backend"
 
 // Define a template for each component
 const serviceTemplate = (tableName) => {
@@ -428,7 +428,7 @@ const init = (tableData) => {
   fs.writeFileSync(path.join(path.join(BasePath, ''), `package.json`), packageJSONTemplate());
   fs.writeFileSync(path.join(path.join(BasePath, ''), `.env`), envTemplate());
 
-  generateZipOfResult()
+  // generateZipOfResult()
 }
 
 module.exports = init

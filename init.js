@@ -1,6 +1,14 @@
+const path = require('path');
 const Backend_builder = require('./Services/Backend_builder');
 const generateCreateTableQueries = require('./Services/create_sql_table');
 const frontend_builder = require('./Services/frontend_builder');
+const fs = require('fs');
+
+const response_folder = path.join(__dirname, 'dist')
+if (!fs.existsSync(response_folder)) {
+  fs.mkdirSync(response_folder);
+}
+
 // Replace this with your table data
 const tableData = [
     {
@@ -56,4 +64,7 @@ const tableData = [
 
 Backend_builder(tableData)
 frontend_builder(tableData)
-console.log(generateCreateTableQueries(tableData))
+
+fs.writeFileSync(path.join(response_folder, `batch.sql`), generateCreateTableQueries(tableData));
+//   step 1:- psql -d test -U postgres 
+//   step 2:- \i C:/Users/Tejas/Documents/node/get_browser_log/dist/batch.sql; 

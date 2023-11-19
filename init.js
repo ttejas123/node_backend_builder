@@ -43,7 +43,7 @@ const tableData = [
       name: 'customer',
       table_name: "Customers",
       fields: [
-        { name: 'customer_id', type: 'int', modelType: 'number' },
+        { name: 'id', type: 'integer', modelType: 'number' },
         { name: 'first_name', type: 'varchar(100)', modelType: 'string' },
         { name: 'last_name', type: 'varchar(100)', modelType: 'string' },
         { name: 'age', type: 'int', modelType: 'number' },
@@ -54,7 +54,7 @@ const tableData = [
       name: 'order',
       table_name: "Orders",
       fields: [
-        { name: 'order_id', type: 'integer', modelType: 'number' },
+        { name: 'id', type: 'integer', modelType: 'number' },
         { name: 'item', type: 'varchar(100)', modelType: 'string' },
         { name: 'amount', type: 'integer', modelType: 'number' },
         { name: 'customer_id', type: 'integer', modelType: 'number' },

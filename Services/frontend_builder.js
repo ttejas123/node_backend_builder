@@ -21,7 +21,7 @@ const generateReactComponent = (tableName, fields, ComponentName) => {
   }).join('\n');
 
   return `
-    import React, { useState } from 'react';
+    import { useState } from 'react';
     import axios from 'axios';
 
     const ${ComponentName}Form = () => {
@@ -29,7 +29,7 @@ const generateReactComponent = (tableName, fields, ComponentName) => {
 
       const handleSubmit = async () => {
         try {
-          const response = await axios.post('/${tableName}', {data: [formData]});
+          const response = await axios.post('http://localhost:3000/${tableName}', {data: [formData]});
           console.log(response.data);
         } catch (error) {
           console.error('Error:', error);

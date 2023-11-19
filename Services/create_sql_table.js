@@ -15,7 +15,7 @@ const generateCreateTableQueries = (tableData) => {
         //     fields += `, FOREIGN KEY (${foreignKey.name}) REFERENCES ${foreignKey.join}(${foreignKey.name})`;
         // }
 
-        let query = `CREATE TABLE IF NOT EXISTS ${table.name} (${fields});`;
+        let query = `CREATE TABLE IF NOT EXISTS "${table.name}" (${fields});`;
         sqlQueries.push(query);
     });
 

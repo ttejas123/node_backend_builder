@@ -66,5 +66,3 @@ Backend_builder(tableData)
 frontend_builder(tableData)
 
 fs.writeFileSync(path.join(response_folder, `batch.sql`), generateCreateTableQueries(tableData));
-//   step 1:- psql -d test -U postgres 
-//   step 2:- \i C:/Users/Tejas/Documents/node/get_browser_log/dist/batch.sql; 

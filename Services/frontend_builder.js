@@ -4,42 +4,51 @@ const base_forlder = "/../dist/Result-frontend"
 
 // Replace this with your table data
 const generateReactComponent = (tableName, fields, ComponentName) => {
-    const fieldElements = fields.map(field => (
-      `<div key="${field.name}">
-        <label>${field.name}:</label>
-        <input type="${field.modelType}" name="${field.name}" />
+  const fieldElements = fields.map(field => {
+    const fieldName = field.name;
+    const fieldType = field.modelType;
+
+    return (
+      `<div key="${fieldName}">
+        <label>${fieldName}:</label>
+        <input
+          type="${fieldType}"
+          name="${fieldName}"
+          onChange={(e) => setFormData({ ...formData, [e.target.name]: e.target.value })}
+        />
       </div>`
-    )).join('\n');
-  
-    return `
-      import React, { useState } from 'react';
-      import axios from 'axios';
-  
-      const ${ComponentName}Form = () => {
-        const [formData, setFormData] = useState({});
-  
-        const handleSubmit = async () => {
-          try {
-            const response = await axios.post('/${tableName}', formData);
-            console.log(response.data);
-          } catch (error) {
-            console.error('Error:', error);
-          }
-        };
-  
-        return (
-          <div>
-            <h2>${ComponentName} Form</h2>
-            <form onSubmit={handleSubmit}>
-              ${fieldElements}
-              <button type="submit">Submit</button>
-            </form>
-          </div>
-        );
+    );
+  }).join('\n');
+
+  return `
+    import React, { useState } from 'react';
+    import axios from 'axios';
+
+    const ${ComponentName}Form = () => {
+      const [formData, setFormData] = useState({});
+
+      const handleSubmit = async () => {
+        try {
+          const response = await axios.post('/${tableName}', {data: [formData]});
+          console.log(response.data);
+        } catch (error) {
+          console.error('Error:', error);
+        }
       };
-  
-      export default ${ComponentName}Form;
-    `;
+
+      return (
+        <div>
+          <h2>${ComponentName} Form</h2>
+          <form onSubmit={handleSubmit}>
+            ${fieldElements}
+            <button type="submit">Submit</button>
+          </form>
+        </div>
+      );
+    };
+
+    export default ${ComponentName}Form;
+  `;
   };
   
   const generateReactMainApp = (tableData) => {

@@ -1,5 +1,6 @@
 const fs = require('fs');
 const path = require('path')
+const archiver = require('archiver');
 const base_forlder = "/../dist/Result-frontend"
 
 // Replace this with your table data
@@ -37,12 +38,13 @@ const generateReactComponent = (tableName, fields, ComponentName) => {
   }).join('\n');
 
   return `
+/* eslint-disable react/prop-types */
 import { useState } from 'react';
 import axios from 'axios';
-import Modal from 'react-modal'; // Import the modal library
+import { Button, Modal, ModalHeader, ModalBody } from 'reactstrap';
 import '../../assets/FormStyles.scss'
 
-const ${ComponentName}Form = ({ isOpen, onRequestClose }) => {
+const ${ComponentName}Form = ({ isOpen, onRequestClose, toggle, ...args }) => {
   const [formData, setFormData] = useState({});
 
   const handleSubmit = async () => {
@@ -55,21 +57,25 @@ const ${ComponentName}Form = ({ isOpen, onRequestClose }) => {
     }
   };
 
+  const closeBtn = (
+    <Button className="close" onClick={onRequestClose} type="button">
+      &times;
+    </Button>
+  );
+
   return (
-    <Modal
-      isOpen={isOpen}
-      onRequestClose={onRequestClose}
-      contentLabel="${ComponentName} Form"
-      style={{ width: "100%", display: "flex", justifyContent: "center", alignItems: "center" }}
-    >
-      <div className='card card--accent'>
-        <h2>${ComponentName} Form</h2>
+
+    <Modal className='card card--accent p-0'  isOpen={isOpen} toggle={onRequestClose} {...args}>
+      <ModalHeader toggle={toggle} close={closeBtn}>Users Form</ModalHeader>
+      <ModalBody className='w-100'>
         <form onSubmit={handleSubmit}>
           ${fieldElements}
-          <button type="submit">Submit</button>
+          <Button className='mt-3 w-25 d-flex justify-content-center' type="submit">Submit</Button>
         </form>
-      </div>
+      </ModalBody>
     </Modal>
+
+      
   );
 };
 
@@ -78,11 +84,22 @@ export default ${ComponentName}Form;
   };
 
   const generateDataTableComponent = (tableName, fields, ComponentName) => {
-    const columns = fields.map(field => ({
-      name: field.name,
-      selector: field.name,
-      sortable: true,
-    }));
+    const columns = fields.map(field => {
+      if(field.type === 'boolean') {
+        return (`{
+          name: "${field.name}",
+          selector: (row)=> {
+            return (row["${field.name}"] ? <div>✅</div> : <div>❌</div>)
+          },
+          sortable: true,
+        }`)
+      }
+      return (`{
+        name: "${field.name}",
+        selector: "${field.name}",
+        sortable: true,
+      }`)
+    });
   
     return `
       import { useEffect, useState } from 'react';
@@ -96,6 +113,7 @@ export default ${ComponentName}Form;
 
         const openModal = () => setIsModalOpen(true);
         const closeModal = () => setIsModalOpen(false);
+        const toggle = () => setIsModalOpen((pre)=> (!pre));
   
         useEffect(() => {
           fetchData();
@@ -109,18 +127,51 @@ export default ${ComponentName}Form;
             console.error('Error:', error);
           }
         };
+        
+        const handleDelete = async (id) => {
+          try {
+            await axios.delete('http://localhost:3000/${tableName}/'+id);
+            fetchData()
+          } catch (error) {
+            console.error('Error:', error);
+          }
+        };
+
+        const handleEdit = async (id) => {
+          try {
+            toggle(id)
+            // const response = await axios.delete('http://localhost:3000/${tableName}/'+id);
+            fetchData()
+          } catch (error) {
+            console.error('Error:', error);
+          }
+        };
   
         return (
           <div>
-            <h2>${tableName} DataTable</h2>
-            <button onClick={openModal}>Add ${ComponentName}</button>
+            <h2>${ComponentName} DataTable</h2>
+            <button type="reset" onClick={openModal}>+ Add ${ComponentName}</button>
             <DataTable
-              columns={${JSON.stringify(columns, null, 2)}}
+              columns={[
+                ${columns},
+                {
+                    "name": "Edit",
+                    "selector": (row) => {
+                      return <div onClick={()=> handleEdit(row.id)}>✏️</div>;
+                    }
+                },
+                {
+                  "name": "Delete",
+                  "selector": (row) => {
+                    return <div onClick={()=> handleDelete(row.id)}>🗑️</div>;
+                  }
+                }
+              ]}
               data={data}
               pagination
               highlightOnHover
             />
-            <${ComponentName}Form isOpen={isModalOpen} onRequestClose={closeModal} />
+            <${ComponentName}Form isOpen={isModalOpen} onRequestClose={closeModal} toggle={toggle} />
           </div>
         );
       };
@@ -140,16 +191,29 @@ import ${table_name}DataTable from './component/${table_name}/${table_name}DataT
 <${table_name}DataTable key="${table_name}_datatable" />
 `)
     }).join('\n');
+
+    const sideBarItems = tableData.map(({table_name}) => {
+      return `
+      {
+        title: "${table_name}",
+        target: "/${`${table_name}`.toLowerCase()}",
+        component: ${table_name}DataTable,
+      },
+      `
+    }).join('\n')
   
     return `
-import React from 'react';
 ${imports}
+import 'bootstrap/dist/css/bootstrap.min.css';
+import SideBar from './component/baseComponent/Sidebar';
 
 const App = () => {
+  const sidebarIntesm = [
+    ${sideBarItems}
+  ]
 return (
     <div>
-    <h1>Dynamic Form App</h1>
-    ${components}
+    <SideBar sidebarItems={sidebarIntesm} />
     </div>
 );
 };
@@ -204,7 +268,6 @@ export default defineConfig({
             "dependencies": {
               "axios": "^1.6.2",
               "react": "^18.2.0",
-              "react-data-table-component": "^7.5.4",
               "react-dom": "^18.2.0"
             },
             "devDependencies": {
@@ -217,7 +280,10 @@ export default defineConfig({
               "eslint-plugin-react-refresh": "^0.4.4",
               "vite": "^5.0.0",
               "react-modal": "^3.16.1",
-              "sass": "^1.69.5"
+              "sass": "^1.69.5",
+              "bootstrap": "^5.3.2",      
+              "react-data-table-component": "^7.5.4",
+              "reactstrap": "^9.2.1"
             }
           }
           
@@ -225,22 +291,79 @@ export default defineConfig({
     )
   }
 
+  const generateSideBarMenue = () => {
+    return (
+      `
+      /* eslint-disable react/prop-types */
+import { useState } from "react";
+import { NavItem, NavLink, Nav } from "reactstrap";
+
+const SideBar = ({ toggle, sidebarItems }) => {
+  const [selectedItem, setSelectedItem] = useState(sidebarItems[0]);
+
+  const handleItemClick = (item) => {
+    setSelectedItem(item);
+  };
+
+  return (
+    <div className={"row"} style={{height: "100vh"}}>
+      <div className="sidebar-header col-2 my-auto" style={{borderRight: "1px solid #000"}}>
+        <span color="info" onClick={toggle} style={{ color: "#fff" }}>
+          &times;
+        </span>
+        <h3>Sidebar</h3>
+        <div className="side-menu">
+        <Nav vertical className="list-unstyled pb-3">
+          {sidebarItems.map((item) => (
+            <>
+             
+                <NavItem>
+                  <NavLink
+                    tag={'a'}
+                    style={{cursor: "pointer"}}
+                    to={item.target}
+                    onClick={() => handleItemClick(item)}
+                  >
+                    {item.title}
+                  </NavLink>
+                </NavItem>
+            </>
+          ))}
+        </Nav>
+      </div>
+      </div>
+      <div className="col-10">
+      {selectedItem && <selectedItem.component />}
+      </div>
+    </div>
+  );
+};
+
+export default SideBar;
+      `
+    )
+  }
+
   const generateIndexHTML = () => {
     return (
         `
-<!doctype html>
-<html lang="en">
-  <head>
-    <meta charset="UTF-8" />
-    <link rel="icon" type="image/svg+xml" href="/vite.svg" />
-    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-    <title>Vite + React</title>
-  </head>
-  <body>
-    <div id="root"></div>
-    <script type="module" src="/src/main.jsx"></script>
-  </body>
-</html>
+        <!doctype html>
+        <html lang="en">
+          <head>
+            <meta charset="UTF-8" />
+            <link rel="icon" type="image/svg+xml" href="/vite.svg" />
+            <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+            <title>Vite + React</title>
+            <link
+              rel="stylesheet"
+              href="https://cdn.jsdelivr.net/npm/bootstrap@5.1.0/dist/css/bootstrap.min.css"
+            />
+          </head>
+          <body>
+            <div id="root"></div>
+            <script type="module" src="/src/main.jsx"></script>
+          </body>
+        </html>
         `
     )
   }
@@ -442,6 +565,29 @@ button + button {
       `
     )
   }
+
+  const generateZipOfResult = () => {
+    const resultFolderPath = path.join(__dirname, base_forlder);
+    const zipPath = path.join(__dirname, 'generated-code-frontend.zip');
+    const output = fs.createWriteStream(zipPath);
+    const archive = archiver('zip', { zlib: { level: 9 } });
+  
+    output.on('close', () => {
+      console.log(archive.pointer() + ' total bytes');
+      console.log('archiver has been finalized and the output file descriptor has closed.');
+  
+      // Send the zip file path to the frontend
+    });
+  
+    archive.on('error', (err) => {
+      console.error('Error creating zip file:', err);
+    });
+  
+    // Add the ``BaseFolder`` folder to the zip file
+    archive.directory(resultFolderPath, base_forlder);
+    archive.pipe(output);
+    archive.finalize();
+  }
   
 const init = (tableData) => {
     const folderPathReact = path.join(__dirname, base_forlder);
@@ -452,6 +598,7 @@ const init = (tableData) => {
     const srcfolderPathReact = path.join(folderPathReact, 'src')
     const publicfolderPathReact = path.join(folderPathReact, 'public')
     const componentfolderPathReact = path.join(srcfolderPathReact, 'component')
+    const baseComponentfolderPathReact = path.join(componentfolderPathReact, 'baseComponent')
     const assetsfolderPathReact = path.join(srcfolderPathReact, 'assets')
 
     if (!fs.existsSync(srcfolderPathReact)) {
@@ -464,6 +611,10 @@ const init = (tableData) => {
 
     if (!fs.existsSync(componentfolderPathReact)) {
         fs.mkdirSync(componentfolderPathReact);
+    }
+    
+    if (!fs.existsSync(baseComponentfolderPathReact)) {
+        fs.mkdirSync(baseComponentfolderPathReact);
     }
     
     if (!fs.existsSync(assetsfolderPathReact)) {
@@ -481,6 +632,7 @@ const init = (tableData) => {
 
     fs.writeFileSync(path.join(srcfolderPathReact, 'App.jsx'), generateReactMainApp(tableData));
     fs.writeFileSync(path.join(srcfolderPathReact, 'main.jsx'), generateReactEntryFile());
+    fs.writeFileSync(path.join(baseComponentfolderPathReact, 'Sidebar.jsx'), generateSideBarMenue());
 
     fs.writeFileSync(path.join(assetsfolderPathReact, 'FormStyles.scss'), generateFormScss());
 
@@ -489,6 +641,8 @@ const init = (tableData) => {
     fs.writeFileSync(path.join(folderPathReact, 'index.html'), generateIndexHTML());
     fs.writeFileSync(path.join(folderPathReact, '.gitignore'), generateGITIGNORE());
     fs.writeFileSync(path.join(folderPathReact, '.eslintrc.cjs'), generateESLINTRCCJS());
+
+    generateZipOfResult()
 };
 
 module.exports = init

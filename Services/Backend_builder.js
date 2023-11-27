@@ -371,7 +371,7 @@ const helperClassTemplate  = () => {
 
 const generateZipOfResult = () => {
   const resultFolderPath = path.join(__dirname, BaseFolder);
-  const zipPath = path.join(__dirname, 'generated-code.zip');
+  const zipPath = path.join(__dirname, 'generated-code-backend.zip');
   const output = fs.createWriteStream(zipPath);
   const archive = archiver('zip', { zlib: { level: 9 } });
 
@@ -428,7 +428,7 @@ const init = (tableData) => {
   fs.writeFileSync(path.join(path.join(BasePath, ''), `package.json`), packageJSONTemplate());
   fs.writeFileSync(path.join(path.join(BasePath, ''), `.env`), envTemplate());
 
-  // generateZipOfResult()
+  generateZipOfResult()
 }
 
 module.exports = init

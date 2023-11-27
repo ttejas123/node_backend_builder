@@ -60,6 +60,17 @@ const tableData = [
         { name: 'customer_id', type: 'integer', modelType: 'number' },
       ],
     },
+    {
+      name: 'alarm',
+      table_name: "Alarms",
+      fields: [
+        { name: 'id', type: 'integer', modelType: 'number' },
+        { name: 'alarm_type', type: 'varchar(100)', modelType: 'string' },
+        { name: 'drop_percentage', type: 'integer', modelType: 'number' },
+        { name: 'alarm_count', type: 'integer', modelType: 'number' },
+        { name: 'solved', type: 'boolean', modelType: 'boolean' },
+      ],
+    },
 ];
 
 Backend_builder(tableData)

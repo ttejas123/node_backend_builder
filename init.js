@@ -77,6 +77,11 @@ const tableData = [
     },
 ];
 
+app.set('view engine', 'ejs');
+
+// Serve static files from the 'public' folder
+app.use(express.static(path.join(__dirname, 'public')));
+
 
 const generateZipOfResult = async (res, base_folder = "dist") => {
   const resultFolderPath = path.join(__dirname, base_folder);
@@ -123,6 +128,10 @@ app.get("/", (req, res)=> {
   Backend_builder(tableData)
   frontend_builder(tableData)
   fs.writeFileSync(path.join(response_folder, `batch.sql`), generateCreateTableQueries(tableData));
+  res.render('index', { pageTitle: 'My Node.js Website' });
+})
+
+app.get("/congo", (req, res)=> {
   generateZipOfResult(res)
 })
 

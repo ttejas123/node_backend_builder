@@ -1,0 +1,35 @@
+<!-- views/index.ejs -->
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title><%= pageTitle %></title>
+    <link rel="stylesheet" href="/style.css">
+</head>
+<body>
+    <h1><%= pageTitle %></h1>
+    <p>Welcome to my website!</p>
+    <button id="congoButton"><a href="/congo">Download Project</a></button>
+</body>
+
+<!-- <script>
+    document.getElementById('congoButton').addEventListener('click', async () => {
+        try {
+            // Make a fetch request to the '/congo' API
+            window.location.href = 
+            
+            // Check if the request was successful (status code 200)
+            // if (response.ok) {
+            //     const data = await response.json();
+            //     alert(data.message); // Display a success message
+            // } else {
+            //     alert('Error: Unable to say congratulations'); // Display an error message
+            // }
+        } catch (error) {
+            console.error('Error:', error);
+            // alert('Error: Unable to say congratulations');
+        }
+    });
+</script> -->
+</html>

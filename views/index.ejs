@@ -7,29 +7,129 @@
     <title><%= pageTitle %></title>
     <link rel="stylesheet" href="/style.css">
 </head>
+<!-- views/index.ejs -->
+<!-- ... (previous code) ... -->
 <body>
-    <h1><%= pageTitle %></h1>
-    <p>Welcome to my website!</p>
-    <button id="congoButton"><a href="/congo">Download Project</a></button>
-</body>
+    <div class="container">
+        <h1>.</h1>
+        <h2 >Backend Builder</h2>
+        <textarea id="jsonData" placeholder="Enter your JSON here... (e.g., copy and paste the following format)">
+            [
+                {
+                    "name": "v2_user",
+                    "table_name": "Users",
+                    "fields": [
+                        { "name": "id", "type": "integer", "modelType": "number" },
+                        { "name": "firstname", "type": "string", "modelType": "string" },
+                        { "name": "lastname", "type": "string", "modelType": "string" },
+                        { "name": "email", "type": "string", "modelType": "string" },
+                        { "name": "role", "type": "string", "modelType": "string" },
+                        { "name": "status", "type": "boolean", "modelType": "boolean" },
+                        { "name": "lastlogin", "type": "timestamp", "modelType": "string" },
+                        { "name": "onboarding_id", "type": "integer", "modelType": "number", "join": "onboarding_info" }
+                    ]
+                },
+                {
+                    "name": "onboarding_info",
+                    "table_name": "Onboarding",
+                    "fields": [
+                        { "name": "id", "type": "integer", "modelType": "number" },
+                        { "name": "client", "type": "string", "modelType": "string" },
+                        { "name": "script_url", "type": "string", "modelType": "string" },
+                        { "name": "web_account_id", "type": "string", "modelType": "string" },
+                        { "name": "web_id", "type": "string", "modelType": "string" },
+                        { "name": "validated", "type": "boolean", "modelType": "boolean" },
+                        { "name": "status", "type": "boolean", "modelType": "boolean" },
+                        { "name": "isdashboardready", "type": "boolean", "modelType": "boolean" }
+                    ]
+                },
+                {
+                    "name": "customer",
+                    "table_name": "Customers",
+                    "fields": [
+                        { "name": "id", "type": "integer", "modelType": "number" },
+                        { "name": "first_name", "type": "varchar(100)", "modelType": "string" },
+                        { "name": "last_name", "type": "varchar(100)", "modelType": "string" },
+                        { "name": "age", "type": "int", "modelType": "number" },
+                        { "name": "country", "type": "varchar(100)", "modelType": "string" }
+                    ]
+                },
+                {
+                    "name": "order",
+                    "table_name": "Orders",
+                    "fields": [
+                        { "name": "id", "type": "integer", "modelType": "number" },
+                        { "name": "item", "type": "varchar(100)", "modelType": "string" },
+                        { "name": "amount", "type": "integer", "modelType": "number" },
+                        { "name": "customer_id", "type": "integer", "modelType": "number" }
+                    ]
+                },
+                {
+                    "name": "alarm",
+                    "table_name": "Alarms",
+                    "fields": [
+                        { "name": "id", "type": "integer", "modelType": "number" },
+                        { "name": "alarm_type", "type": "varchar(100)", "modelType": "string" },
+                        { "name": "drop_percentage", "type": "integer", "modelType": "number" },
+                        { "name": "alarm_count", "type": "integer", "modelType": "number" },
+                        { "name": "solved", "type": "boolean", "modelType": "boolean" }
+                    ]
+                }
+            ]
+            </textarea>
+        
+        <button id="buildBtn">Build Project</button>
+        <button id="downloadBtn" style="display: none;text-decoration: none;"><a href="/download" style="
+            text-decoration: none;
+            color: white;
+        ">Download Project</a></button>
+    </div>
 
-<!-- <script>
-    document.getElementById('congoButton').addEventListener('click', async () => {
-        try {
-            // Make a fetch request to the '/congo' API
-            window.location.href = 
-            
-            // Check if the request was successful (status code 200)
-            // if (response.ok) {
-            //     const data = await response.json();
-            //     alert(data.message); // Display a success message
-            // } else {
-            //     alert('Error: Unable to say congratulations'); // Display an error message
-            // }
-        } catch (error) {
-            console.error('Error:', error);
-            // alert('Error: Unable to say congratulations');
-        }
-    });
-</script> -->
+    <script>
+        // Add your client-side JavaScript logic here
+        document.getElementById('buildBtn').addEventListener('click', async () => {
+            // Get the JSON input value
+            const jsonInputValue = document.getElementById('jsonData').value.trim();
+
+            // Check if the input is not empty and is valid JSON
+            if (jsonInputValue !== '') {
+                try {
+                    // Try to parse the input as JSON
+                    console.log(jsonInputValue);
+                    const jsonData = JSON.parse(jsonInputValue);
+
+                    // Make the API call to "/build" with a POST request
+                    const response = await fetch('/build', {
+                        method: 'POST',
+                        headers: {
+                            'Content-Type': 'application/json',
+                        },
+                        body: JSON.stringify({ tableData: jsonData }),
+                    });
+
+                    // Check if the request was successful (status code 200)
+                    if (response.ok) {
+                        const result = await response.json();
+                        alert('Project Is Ready to download ');
+                        
+                        // Enable the "Download Project" button on success
+                        document.getElementById('downloadBtn').style.display = 'block';
+                        document.getElementById('buildBtn').style.display = 'none';
+                    } else {
+                        alert('Error: Unable to build project');
+                    }
+                } catch (error) {
+                    console.error('Error parsing JSON:', error);
+                    alert('Error: Invalid JSON');
+                }
+            } else {
+                alert('Error: JSON input is empty');
+            }
+        });
+
+        // ... (rest of your code)
+    </script>
+</body>
+</html>
+
 </html>

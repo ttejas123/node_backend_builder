@@ -14,69 +14,6 @@ app.use(express.json());
 app.use(cors());
 
 // Replace this with your table data
-const tableData = [
-    {
-      name: 'v2_user',
-      table_name: "Users",
-      fields: [
-        { name: 'id', type: 'integer', modelType: 'number' },
-        { name: 'firstname', type: 'string', modelType: 'string' },
-        { name: 'lastname', type: 'string', modelType: 'string'},
-        { name: 'email', type: 'string', modelType: 'string'},
-        { name: 'role', type: 'string', modelType: 'string'},
-        { name: 'status', type: 'boolean', modelType: 'boolean'},
-        { name: 'lastlogin', type: 'timestamp', modelType: 'string'},
-        { name: 'onboarding_id', type: 'integer', modelType: 'number', join: 'onboarding_info'},
-      ],
-    },
-    {
-      name: 'onboarding_info',
-      table_name: "Onboarding",
-      fields: [
-        { name: 'id', type: 'integer', modelType: 'number' },
-        { name: 'client', type: 'string', modelType: 'string' },
-        { name: 'script_url', type: 'string', modelType: 'string'},
-        { name: 'web_account_id', type: 'string', modelType: 'string'},
-        { name: 'web_id', type: 'string', modelType: 'string'},
-        { name: 'validated', type: 'boolean', modelType: 'boolean'},
-        { name: 'status', type: 'boolean', modelType: 'boolean'},
-        { name: 'isdashboardready', type: 'boolean', modelType: 'boolean'}
-      ],
-    },
-    {
-      name: 'customer',
-      table_name: "Customers",
-      fields: [
-        { name: 'id', type: 'integer', modelType: 'number' },
-        { name: 'first_name', type: 'varchar(100)', modelType: 'string' },
-        { name: 'last_name', type: 'varchar(100)', modelType: 'string' },
-        { name: 'age', type: 'int', modelType: 'number' },
-        { name: 'country', type: 'varchar(100)', modelType: 'string' },
-      ],
-    },
-    {
-      name: 'order',
-      table_name: "Orders",
-      fields: [
-        { name: 'id', type: 'integer', modelType: 'number' },
-        { name: 'item', type: 'varchar(100)', modelType: 'string' },
-        { name: 'amount', type: 'integer', modelType: 'number' },
-        { name: 'customer_id', type: 'integer', modelType: 'number' },
-      ],
-    },
-    {
-      name: 'alarm',
-      table_name: "Alarms",
-      fields: [
-        { name: 'id', type: 'integer', modelType: 'number' },
-        { name: 'alarm_type', type: 'varchar(100)', modelType: 'string' },
-        { name: 'drop_percentage', type: 'integer', modelType: 'number' },
-        { name: 'alarm_count', type: 'integer', modelType: 'number' },
-        { name: 'solved', type: 'boolean', modelType: 'boolean' },
-      ],
-    },
-];
-
 app.set('view engine', 'ejs');
 
 // Serve static files from the 'public' folder
@@ -121,6 +58,11 @@ const generateZipOfResult = async (res, base_folder = "dist") => {
 
 
 app.get("/", (req, res)=> {
+  res.render('index', { pageTitle: 'Initiated Project' });
+})
+
+app.post("/build", (req, res)=> {
+  const { tableData } = req.body;
   const response_folder = path.join(__dirname, 'dist')
   if (!fs.existsSync(response_folder)) {
     fs.mkdirSync(response_folder);
@@ -128,10 +70,10 @@ app.get("/", (req, res)=> {
   Backend_builder(tableData)
   frontend_builder(tableData)
   fs.writeFileSync(path.join(response_folder, `batch.sql`), generateCreateTableQueries(tableData));
-  res.render('index', { pageTitle: 'My Node.js Website' });
+  res.send({data: "Ready"})
 })
 
-app.get("/congo", (req, res)=> {
+app.get("/download", (req, res)=> {
   generateZipOfResult(res)
 })
 

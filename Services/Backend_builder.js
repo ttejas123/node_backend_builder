@@ -369,7 +369,7 @@ const helperClassTemplate  = () => {
   `
 }
 
-const generateZipOfResult = () => {
+const generateZipOfResult = (res) => {
   const resultFolderPath = path.join(__dirname, BaseFolder);
   const zipPath = path.join(__dirname, 'generated-code-backend.zip');
   const output = fs.createWriteStream(zipPath);
@@ -390,9 +390,23 @@ const generateZipOfResult = () => {
   archive.directory(resultFolderPath, BaseFolder);
   archive.pipe(output);
   archive.finalize();
+
+  res.download(zipPath, 'generated-code-backend.zip', (err) => {
+    if (err) {
+      console.error('Error sending zip file:', err);
+      res.status(500).send('Internal Server Error');
+    } else {
+      // Optionally, you can remove the generated zip file after it's sent
+      fs.unlink(zipPath, (unlinkErr) => {
+        if (unlinkErr) {
+          console.error('Error deleting zip file:', unlinkErr);
+        }
+      });
+    }
+  });
 }
 
-const init = (tableData) => {
+const init = (tableData, res_download) => {
   const Main_Backend_starter = path.join(__dirname, BaseFolder)
   if (!fs.existsSync(Main_Backend_starter)) {
     fs.mkdirSync(Main_Backend_starter);
@@ -428,7 +442,7 @@ const init = (tableData) => {
   fs.writeFileSync(path.join(path.join(BasePath, ''), `package.json`), packageJSONTemplate());
   fs.writeFileSync(path.join(path.join(BasePath, ''), `.env`), envTemplate());
 
-  generateZipOfResult()
+  // generateZipOfResult(res_download)
 }
 
 module.exports = init

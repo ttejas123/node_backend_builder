@@ -566,12 +566,11 @@ button + button {
     )
   }
 
-  const generateZipOfResult = () => {
+  const generateZipOfResult = (res) => {
     const resultFolderPath = path.join(__dirname, base_forlder);
     const zipPath = path.join(__dirname, 'generated-code-frontend.zip');
     const output = fs.createWriteStream(zipPath);
     const archive = archiver('zip', { zlib: { level: 9 } });
-  
     output.on('close', () => {
       console.log(archive.pointer() + ' total bytes');
       console.log('archiver has been finalized and the output file descriptor has closed.');
@@ -589,7 +588,7 @@ button + button {
     archive.finalize();
   }
   
-const init = (tableData) => {
+const init = (tableData, res_download) => {
     const folderPathReact = path.join(__dirname, base_forlder);
     if (!fs.existsSync(folderPathReact)) {
       fs.mkdirSync(folderPathReact);
@@ -642,7 +641,7 @@ const init = (tableData) => {
     fs.writeFileSync(path.join(folderPathReact, '.gitignore'), generateGITIGNORE());
     fs.writeFileSync(path.join(folderPathReact, '.eslintrc.cjs'), generateESLINTRCCJS());
 
-    generateZipOfResult()
+    // generateZipOfResult(res_download)
 };
 
 module.exports = init

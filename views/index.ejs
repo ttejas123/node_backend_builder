@@ -1,83 +1,90 @@
 <!-- views/index.ejs -->
 <!DOCTYPE html>
 <html lang="en">
+
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title><%= pageTitle %></title>
+    <title>
+        <%= pageTitle %>
+    </title>
     <link rel="stylesheet" href="/style.css">
 </head>
 <!-- views/index.ejs -->
 <!-- ... (previous code) ... -->
+
 <body>
     <div class="container">
         <h1>.</h1>
-        <h2 >Backend Builder</h2>
+        <h4>Schema example</h4>
+        <code>
         <textarea id="jsonData" placeholder="Enter your JSON here... (e.g., copy and paste the following format)">
-            [
-                {
-                    "name": "v2_user",
-                    "table_name": "Users",
-                    "fields": [
-                        { "name": "id", "type": "integer", "modelType": "number" },
-                        { "name": "firstname", "type": "string", "modelType": "string" },
-                        { "name": "lastname", "type": "string", "modelType": "string" },
-                        { "name": "email", "type": "string", "modelType": "string" },
-                        { "name": "role", "type": "string", "modelType": "string" },
-                        { "name": "status", "type": "boolean", "modelType": "boolean" },
-                        { "name": "lastlogin", "type": "timestamp", "modelType": "string" },
-                        { "name": "onboarding_id", "type": "integer", "modelType": "number", "join": "onboarding_info" }
-                    ]
-                },
-                {
-                    "name": "onboarding_info",
-                    "table_name": "Onboarding",
-                    "fields": [
-                        { "name": "id", "type": "integer", "modelType": "number" },
-                        { "name": "client", "type": "string", "modelType": "string" },
-                        { "name": "script_url", "type": "string", "modelType": "string" },
-                        { "name": "web_account_id", "type": "string", "modelType": "string" },
-                        { "name": "web_id", "type": "string", "modelType": "string" },
-                        { "name": "validated", "type": "boolean", "modelType": "boolean" },
-                        { "name": "status", "type": "boolean", "modelType": "boolean" },
-                        { "name": "isdashboardready", "type": "boolean", "modelType": "boolean" }
-                    ]
-                },
-                {
-                    "name": "customer",
-                    "table_name": "Customers",
-                    "fields": [
-                        { "name": "id", "type": "integer", "modelType": "number" },
-                        { "name": "first_name", "type": "varchar(100)", "modelType": "string" },
-                        { "name": "last_name", "type": "varchar(100)", "modelType": "string" },
-                        { "name": "age", "type": "int", "modelType": "number" },
-                        { "name": "country", "type": "varchar(100)", "modelType": "string" }
-                    ]
-                },
-                {
-                    "name": "order",
-                    "table_name": "Orders",
-                    "fields": [
-                        { "name": "id", "type": "integer", "modelType": "number" },
-                        { "name": "item", "type": "varchar(100)", "modelType": "string" },
-                        { "name": "amount", "type": "integer", "modelType": "number" },
-                        { "name": "customer_id", "type": "integer", "modelType": "number" }
-                    ]
-                },
-                {
-                    "name": "alarm",
-                    "table_name": "Alarms",
-                    "fields": [
-                        { "name": "id", "type": "integer", "modelType": "number" },
-                        { "name": "alarm_type", "type": "varchar(100)", "modelType": "string" },
-                        { "name": "drop_percentage", "type": "integer", "modelType": "number" },
-                        { "name": "alarm_count", "type": "integer", "modelType": "number" },
-                        { "name": "solved", "type": "boolean", "modelType": "boolean" }
-                    ]
-                }
-            ]
-            </textarea>
-        
+[
+    {
+        "name": "v2_user",
+        "table_name": "Users",
+        "fields": [
+            { "name": "id", "type": "integer", "modelType": "number" },
+            { "name": "firstname", "type": "string", "modelType": "string" },
+            { "name": "lastname", "type": "string", "modelType": "string" },
+            { "name": "email", "type": "string", "modelType": "string" },
+            { "name": "role", "type": "string", "modelType": "string" },
+            { "name": "status", "type": "boolean", "modelType": "boolean" },
+            { "name": "lastlogin", "type": "timestamp", "modelType": "string" },
+            { "name": "onboarding_id", "type": "integer", "modelType": "number", "join": "onboarding_info" }
+        ]
+    },
+    {
+        "name": "onboarding_info",
+        "table_name": "Onboarding",
+        "fields": [
+            { "name": "id", "type": "integer", "modelType": "number" },
+            { "name": "client", "type": "string", "modelType": "string" },
+            { "name": "script_url", "type": "string", "modelType": "string" },
+            { "name": "web_account_id", "type": "string", "modelType": "string" },
+            { "name": "web_id", "type": "string", "modelType": "string" },
+            { "name": "validated", "type": "boolean", "modelType": "boolean" },
+            { "name": "status", "type": "boolean", "modelType": "boolean" },
+            { "name": "isdashboardready", "type": "boolean", "modelType": "boolean" }
+        ]
+    },
+    {
+        "name": "customer",
+        "table_name": "Customers",
+        "fields": [
+            { "name": "id", "type": "integer", "modelType": "number" },
+            { "name": "first_name", "type": "varchar(100)", "modelType": "string" },
+            { "name": "last_name", "type": "varchar(100)", "modelType": "string" },
+            { "name": "age", "type": "int", "modelType": "number" },
+            { "name": "country", "type": "varchar(100)", "modelType": "string" }
+        ]
+    },
+    {
+        "name": "order",
+        "table_name": "Orders",
+        "fields": [
+            { "name": "id", "type": "integer", "modelType": "number" },
+            { "name": "item", "type": "varchar(100)", "modelType": "string" },
+            { "name": "amount", "type": "integer", "modelType": "number" },
+            { "name": "customer_id", "type": "integer", "modelType": "number" }
+        ]
+    },
+    {
+        "name": "alarm",
+        "table_name": "Alarms",
+        "fields": [
+            { "name": "id", "type": "integer", "modelType": "number" },
+            { "name": "alarm_type", "type": "varchar(100)", "modelType": "string" },
+            { "name": "drop_percentage", "type": "integer", "modelType": "number" },
+            { "name": "alarm_count", "type": "integer", "modelType": "number" },
+            { "name": "solved", "type": "boolean", "modelType": "boolean" }
+        ]
+    }
+]
+           
+        </textarea>
+        </code>
+
         <button id="buildBtn">Build Project</button>
         <button id="downloadBtn" style="display: none;text-decoration: none;"><a href="/download" style="
             text-decoration: none;
@@ -111,7 +118,7 @@
                     if (response.ok) {
                         const result = await response.json();
                         alert('Project Is Ready to download ');
-                        
+
                         // Enable the "Download Project" button on success
                         document.getElementById('downloadBtn').style.display = 'block';
                         document.getElementById('buildBtn').style.display = 'none';
@@ -130,6 +137,7 @@
         // ... (rest of your code)
     </script>
 </body>
+
 </html>
 
 </html>

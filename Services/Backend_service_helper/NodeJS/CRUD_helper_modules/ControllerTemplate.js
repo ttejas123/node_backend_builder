@@ -2,10 +2,10 @@ const controllerTemplate = (tableName) => `
 import { ${tableName}Service } from './${tableName}.service'
 import { Router } from 'express'
 const router = Router();
-import { generateApiResponse, authentication } from '../helper/Helper';
+import { generateApiResponse, base_service_interface } from '../helper/Helper';
 
 export class ${tableName}Controller {
-  service: any;
+  service: base_service_interface;
   constructor() {
     this.service = new ${tableName}Service();
 

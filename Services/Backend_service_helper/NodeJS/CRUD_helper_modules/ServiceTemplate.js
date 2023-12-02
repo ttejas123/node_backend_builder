@@ -1,10 +1,11 @@
 const serviceTemplate = (tableName) => {
   
     return `
-    import{ ${tableName}Repository } from './${tableName}.repository'
+    import { ${tableName}Repository, ${tableName}_repository_interface } from './${tableName}.repository'
+    import { base_service_interface } from '../helper/Helper'
 
-    export class ${tableName}Service {
-      repository:any;
+    export class ${tableName}Service implements base_service_interface {
+      repository:${tableName}_repository_interface;
       constructor() {
         this.repository = new ${tableName}Repository();
       }

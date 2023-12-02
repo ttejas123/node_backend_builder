@@ -3,7 +3,17 @@ const repositoryTemplate = (tableName, fields) => {
     return `
   import { Pool } from 'pg';
   import { ${tableName} } from './${tableName}.model'
-  export class ${tableName}Repository {
+
+  export interface ${tableName}_repository_interface {
+    create(data: ${tableName}[]): Promise<${tableName} | undefined>;
+    read(id: any): Promise<${tableName}[] | any[]>;
+    readAll(): Promise<${tableName}[] | any[]>;
+    exists(id: any): Promise<boolean>;
+    update(id: any, data: any): Promise<${tableName} | undefined>;
+    delete(id: any): Promise<${tableName} | undefined>;
+  }
+
+  export class ${tableName}Repository implements ${tableName}_repository_interface {
     db: any;
     constructor() {
       this.db = new Pool({

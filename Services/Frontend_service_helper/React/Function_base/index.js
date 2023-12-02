@@ -36,8 +36,33 @@ const base_forlder = "/../dist/Result-frontend"
     archive.pipe(output);
     archive.finalize();
   }
+
+function generateNestedJSON(dataArray, __dirname) {
+    const result = {};
+
+    dataArray.forEach((item) => {
+      // console.log(item.path.replace(__dirname.replace("\\Services\\", ""), ""));
+      const pathComponents = item.path.replace(__dirname.replace("\\Services", "")+'\\', "").split('\\');
+      let current = result;
+  
+      // Iterate through path components and build the nested structure
+      pathComponents.forEach((component, index) => {
+        if (index === pathComponents.length - 1) {
+          // Last component, set the generator_module
+          current[component] = item.genarator_module;
+        } else {
+          // Create nested structure if it doesn't exist
+          current[component] = current[component] || {};
+          current = current[component];
+        }
+      });
+    });
+  
+    return result;
+}
   
 const init = (tableData, res_download, __dirname) => {
+    const preview_arr = []
     const folderPathReact = path.join(__dirname, base_forlder);
     if (!fs.existsSync(folderPathReact)) {
       fs.mkdirSync(folderPathReact);
@@ -76,20 +101,61 @@ const init = (tableData, res_download, __dirname) => {
         }
       fs.writeFileSync(path.join(component_folder, `${table_name}DataTable.jsx`), generateDataTableComponent(name, fields, table_name));
       fs.writeFileSync(path.join(component_folder, `${table_name}Form.jsx`), generateReactComponent(name, fields, table_name));
+
+      preview_arr.push({
+        path: path.join(component_folder, `${table_name}DataTable.jsx`),
+        genarator_module: generateDataTableComponent(name, fields, table_name),
+      })
+      preview_arr.push({
+        path: path.join(component_folder, `${table_name}Form.jsx`),
+        genarator_module: generateReactComponent(name, fields, table_name),
+      })
     });
 
     fs.writeFileSync(path.join(srcfolderPathReact, 'App.jsx'), generateReactMainApp(tableData));
     fs.writeFileSync(path.join(srcfolderPathReact, 'main.jsx'), generateReactEntryFile());
     fs.writeFileSync(path.join(baseComponentfolderPathReact, 'Sidebar.jsx'), generateSideBarMenue());
-
     fs.writeFileSync(path.join(assetsfolderPathReact, 'FormStyles.scss'), generateFormScss());
-
     fs.writeFileSync(path.join(folderPathReact, 'vite.config.js'), generateVitaConfigTemplate());
     fs.writeFileSync(path.join(folderPathReact, 'package.json'), generatePackageJSONTemplate());
     fs.writeFileSync(path.join(folderPathReact, 'index.html'), generateIndexHTML());
     fs.writeFileSync(path.join(folderPathReact, '.gitignore'), generateGITIGNORE());
     fs.writeFileSync(path.join(folderPathReact, '.eslintrc.cjs'), generateESLINTRCCJS());
+    preview_arr.push(...[{
+        path: path.join(srcfolderPathReact, 'App.jsx'),
+        genarator_module: generateReactMainApp(tableData),
+      }, {
+        path: path.join(srcfolderPathReact, 'main.jsx'),
+        genarator_module: generateReactEntryFile(),
+      }, { 
+        path: path.join(baseComponentfolderPathReact, 'Sidebar.jsx'),
+        genarator_module: generateSideBarMenue(),
+      },
+      { 
+        path: path.join(assetsfolderPathReact, 'FormStyles.scss'),
+        genarator_module: generateFormScss(),
+      },
+      { 
+        path: path.join(folderPathReact, 'vite.config.js'),
+        genarator_module: generateVitaConfigTemplate(),
+      }, { 
+        path: path.join(folderPathReact, 'package.json'),
+        genarator_module: generatePackageJSONTemplate(),
+      }, { 
+        path: path.join(folderPathReact, 'index.html'),
+        genarator_module: generateIndexHTML(),
+      },
+      { 
+        path: path.join(folderPathReact, '.gitignore'),
+        genarator_module: generateGITIGNORE(),
+      },
+      { 
+        path: path.join(folderPathReact, '.eslintrc.cjs'),
+        genarator_module: generateESLINTRCCJS(),
+      }])
 
+    const resultJSON = generateNestedJSON(preview_arr, __dirname);
+    fs.writeFileSync(path.join(__dirname, "JSON.json"), JSON.stringify(resultJSON, null, 2))
     // generateZipOfResult(res_download)
 };
 
